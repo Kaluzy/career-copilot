@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Career Copilot</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{
+  glass:'rgba(255,255,255,0.05)',
+  'glass-border':'rgba(255,255,255,0.10)'
+}}}}
+</script>
+<style>
+  :root{--bg:#0b1120;--surface:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.10);--teal:#14b8a6;--blue:#3b82f6;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+  .glass{background:var(--surface);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;}
+  .glass-sm{background:var(--surface);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:8px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+  .btn-teal{background:var(--teal);color:#fff;} .btn-teal:hover{background:#0d9488;}
+  .btn-blue{background:var(--blue);color:#fff;} .btn-blue:hover{background:#2563eb;}
+  .btn-ghost{background:rgba(255,255,255,0.08);color:#cbd5e1;border:1px solid var(--border);} .btn-ghost:hover{background:rgba(255,255,255,0.12);}
+  .btn-danger{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);} .btn-danger:hover{background:rgba(239,68,68,0.25);}
+  .nav-tab{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:#94a3b8;transition:all .15s;border:1px solid transparent;}
+  .nav-tab.active{background:rgba(20,184,166,0.15);color:var(--teal);border-color:rgba(20,184,166,0.3);}
+  .nav-tab:hover:not(.active){background:rgba(255,255,255,0.06);color:#e2e8f0;}
+  .filter-tab{padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:500;color:#94a3b8;background:transparent;border:1px solid var(--border);transition:all .15s;}
+  .filter-tab.active{color:#fff;}
+  .filter-tab.active.all{background:rgba(100,116,139,0.3);border-color:rgba(100,116,139,0.5);}
+  .filter-tab.active.strong{background:rgba(34,197,94,0.2);border-color:rgba(34,197,94,0.4);color:#86efac;}
+  .filter-tab.active.good{background:rgba(20,184,166,0.2);border-color:rgba(20,184,166,0.4);color:#5eead4;}
+  .filter-tab.active.stretch{background:rgba(234,179,8,0.2);border-color:rgba(234,179,8,0.4);color:#fde047;}
+  .filter-tab.active.pass{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);color:#fca5a5;}
+  .tier-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:.5px;}
+  .tier-strong{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.3);}
+  .tier-good{background:rgba(20,184,166,0.15);color:#5eead4;border:1px solid rgba(20,184,166,0.3);}
+  .tier-stretch{background:rgba(234,179,8,0.15);color:#fde047;border:1px solid rgba(234,179,8,0.3);}
+  .tier-pass{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);}
+  .score-ring{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+  .score-high{background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4);color:#86efac;}
+  .score-mid{background:rgba(20,184,166,0.15);border:2px solid rgba(20,184,166,0.4);color:#5eead4;}
+  .score-low{background:rgba(234,179,8,0.15);border:2px solid rgba(234,179,8,0.4);color:#fde047;}
+  .score-poor{background:rgba(239,68,68,0.15);border:2px solid rgba(239,68,68,0.4);color:#fca5a5;}
+  .status-pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+  .status-applied{background:rgba(59,130,246,0.15);color:#93c5fd;}
+  .status-phone_screen{background:rgba(168,85,247,0.15);color:#d8b4fe;}
+  .status-interview{background:rgba(234,179,8,0.15);color:#fde047;}
+  .status-offer{background:rgba(34,197,94,0.15);color:#86efac;}
+  .status-rejected{background:rgba(239,68,68,0.15);color:#fca5a5;}
+  .status-withdrawn{background:rgba(100,116,139,0.15);color:#94a3b8;}
+  .dim-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.08);}
+  .dim-fill{height:4px;border-radius:2px;transition:width .3s;}
+  input,select,textarea{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:#e2e8f0;padding:8px 12px;font-size:14px;width:100%;outline:none;transition:border-color .15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--teal);}
+  select option{background:#1e293b;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .toast{position:fixed;bottom:24px;right:24px;z-index:200;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:500;animation:slideUp .2s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .empty-state{text-align:center;padding:60px 20px;color:#475569;}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+  #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;}
+  .setup-warning{background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fde047;}
+</style>
+</head>
+<body>
+
+<!-- ─── CONFIG — fill these in after Supabase setup ───────────────────── -->
+<script>
+const SUPABASE_URL     = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const BACKEND_URL      = 'YOUR_BACKEND_URL';   // Render URL once deployed (optional)
+</script>
+
+<!-- ─── Login Screen ─────────────────────────────────────────────────── -->
+<div id="loginScreen">
+  <div class="glass" style="width:100%;max-width:380px;padding:36px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:28px;font-weight:700;background:linear-gradient(135deg,#14b8a6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Career Copilot</div>
+      <div style="color:#64748b;font-size:14px;margin-top:6px;">AI-powered job search assistant</div>
+    </div>
+    <div id="loginSetupWarning" class="setup-warning" style="display:none;">
+      ⚠️ Supabase not configured yet. Edit the CONFIG section in index.html first.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="email"/>
+      <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password"/>
+      <button class="btn btn-teal" style="width:100%;justify-content:center;" onclick="login()">Sign In</button>
+    </div>
+    <div id="loginError" style="color:#f87171;font-size:13px;margin-top:10px;text-align:center;display:none;"></div>
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:#475569;">
+      New account? <a href="#" onclick="signUp()" style="color:var(--teal);text-decoration:none;">Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Main App ──────────────────────────────────────────────────────── -->
+<div id="mainApp" style="display:none;min-height:100vh;">
+
+  <!-- Header -->
+  <header class="glass" style="position:sticky;top:0;z-index:50;border-radius:0;border-left:none;border-right:none;border-top:none;padding:0 20px;">
+    <div style="max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;">
+      <div style="display:flex;align-items:center;gap:20px;">
+        <div style="font-size:18px;font-weight:700;background:linear-gradient(135deg,#14b8a6,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Career Copilot</div>
+        <nav style="display:flex;gap:4px;">
+          <div class="nav-tab active" id="tab-jobs" onclick="setView('jobs')">🎯 Jobs</div>
+          <div class="nav-tab" id="tab-applications" onclick="setView('applications')">📋 Applied</div>
+          <div class="nav-tab" id="tab-companies" onclick="setView('companies')">🏢 Companies</div>
+          <div class="nav-tab" id="tab-ingest" onclick="setView('ingest')">⚡ Ingest</div>
+        </nav>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="syncBadge" style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:4px;">
+          <span id="syncDot" style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+          <span id="syncText">ready</span>
+        </div>
+        <div id="userBadge" style="font-size:13px;color:#64748b;"></div>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:13px;" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main style="max-width:1200px;margin:0 auto;padding:20px;">
+
+    <!-- ── JOBS VIEW ──────────────────────────────────────────────────── -->
+    <div id="view-jobs">
+      <!-- Stats Row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;" id="statsRow">
+        <div class="glass-sm" style="padding:16px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#86efac;" id="stat-strong">—</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Strong Fit</div>
+        </div>
+        <div class="glass-sm" style="padding:16px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#5eead4;" id="stat-good">—</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Good Fit</div>
+        </div>
+        <div class="glass-sm" style="padding:16px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#fde047;" id="stat-stretch">—</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Stretch</div>
+        </div>
+        <div class="glass-sm" style="padding:16px;text-align:center;">
+          <div style="font-size:24px;font-weight:700;color:#e2e8f0;" id="stat-total">—</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Total Scored</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="filter-tab active all" onclick="setJobFilter('all')">All</span>
+          <span class="filter-tab" onclick="setJobFilter('strong_fit')">🟢 Strong Fit</span>
+          <span class="filter-tab" onclick="setJobFilter('good_fit')">🔵 Good Fit</span>
+          <span class="filter-tab" onclick="setJobFilter('stretch')">🟡 Stretch</span>
+          <span class="filter-tab" onclick="setJobFilter('pass')">🔴 Pass</span>
+        </div>
+        <div style="flex:1;"></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#94a3b8;cursor:pointer;">
+          <input type="checkbox" id="remoteOnly" onchange="renderJobs()" style="width:auto;"> Remote only
+        </label>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:13px;" onclick="loadJobs()">↻ Refresh</button>
+      </div>
+
+      <!-- Job Cards -->
+      <div id="jobList" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
+    <!-- ── APPLICATIONS VIEW ──────────────────────────────────────────── -->
+    <div id="view-applications" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="font-size:18px;font-weight:600;">Application Tracker</h2>
+        <div style="font-size:13px;color:#64748b;" id="appCount"></div>
+      </div>
+
+      <!-- Pipeline Stats -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="pipelineStats"></div>
+
+      <div id="appList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- ── COMPANIES VIEW ─────────────────────────────────────────────── -->
+    <div id="view-companies" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="font-size:18px;font-weight:600;">Company Registry</h2>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="companySearch" placeholder="Search companies…" style="width:200px;" oninput="filterCompanies()"/>
+          <select id="companyAts" style="width:140px;" onchange="filterCompanies()">
+            <option value="">All ATS</option>
+            <option value="greenhouse">Greenhouse</option>
+            <option value="lever">Lever</option>
+          </select>
+        </div>
+      </div>
+      <div id="companyList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;"></div>
+    </div>
+
+    <!-- ── INGEST VIEW ────────────────────────────────────────────────── -->
+    <div id="view-ingest" style="display:none;">
+      <h2 style="font-size:18px;font-weight:600;margin-bottom:16px;">Ingestion Control</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px;">
+        <div class="glass" style="padding:20px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px;">🔄 Job Ingestion</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:14px;">Fetch new jobs from all active company boards (Greenhouse + Lever).</div>
+          <button class="btn btn-teal" onclick="triggerIngest()" id="ingestBtn">Run Ingestion</button>
+        </div>
+        <div class="glass" style="padding:20px;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px;">🎯 Scoring</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:14px;">Score all unscored jobs against your candidate profile.</div>
+          <button class="btn btn-blue" onclick="triggerScoring()" id="scoreBtn">Run Scoring</button>
+        </div>
+      </div>
+      <div class="glass" style="padding:20px;margin-top:16px;max-width:700px;">
+        <div style="font-size:15px;font-weight:600;margin-bottom:10px;">📊 Last Run</div>
+        <div id="ingestStatus" style="font-size:13px;color:#64748b;">Loading…</div>
+      </div>
+      <div class="glass" style="padding:20px;margin-top:16px;max-width:700px;">
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px;">⚙️ Backend URL</div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:10px;">Set your Render/Railway backend URL to enable remote ingestion.</div>
+        <div style="display:flex;gap:8px;">
+          <input type="url" id="backendUrlInput" placeholder="https://your-api.onrender.com" style="flex:1;"/>
+          <button class="btn btn-ghost" onclick="saveBackendUrl()">Save</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── Track Application Modal ──────────────────────────────────────── -->
+<div id="trackModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeTrackModal()">
+  <div class="glass" style="width:100%;max-width:440px;padding:24px;">
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">📋 Log Application</div>
+    <div style="font-size:14px;color:#94a3b8;margin-bottom:16px;" id="trackJobTitle"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px;">Status</label>
+        <select id="trackStatus">
+          <option value="applied">Applied</option>
+          <option value="phone_screen">Phone Screen</option>
+          <option value="interview">Interview</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px;">Applied Date</label>
+        <input type="date" id="trackDate"/>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#64748b;display:block;margin-bottom:4px;">Notes</label>
+        <textarea id="trackNotes" rows="2" placeholder="How you found it, referral, etc."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeTrackModal()">Cancel</button>
+      <button class="btn btn-teal" onclick="submitTrackModal()">Save Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Update Status Modal ──────────────────────────────────────────── -->
+<div id="statusModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeStatusModal()">
+  <div class="glass" style="width:100%;max-width:400px;padding:24px;">
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px;">Update Status</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:16px;" id="statusModalTitle"></div>
+    <select id="statusModalSelect" style="margin-bottom:12px;">
+      <option value="applied">Applied</option>
+      <option value="phone_screen">Phone Screen</option>
+      <option value="interview">Interview</option>
+      <option value="offer">Offer</option>
+      <option value="rejected">Rejected</option>
+      <option value="withdrawn">Withdrawn</option>
+    </select>
+    <textarea id="statusModalNotes" rows="2" placeholder="Notes (optional)…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeStatusModal()">Cancel</button>
+      <button class="btn btn-teal" onclick="submitStatusModal()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Score Breakdown Modal ─────────────────────────────────────────── -->
+<div id="scoreModal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeScoreModal()">
+  <div class="glass" style="width:100%;max-width:480px;padding:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:600;" id="scoreModalTitle"></div>
+      <button onclick="closeScoreModal()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <div id="scoreModalBody"></div>
+  </div>
+</div>
+
+<!-- ─── Supabase SDK ──────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// ── State ─────────────────────────────────────────────────────────────
+let _sb = null;
+let STATE = {
+  view: 'jobs',
+  user: null,
+  jobs: [],
+  allJobs: [],
+  applications: [],
+  companies: [],
+  jobFilter: 'all',
+};
+let _trackJobId = null;
+let _statusAppId = null;
+
+// ── Init ──────────────────────────────────────────────────────────────
+function initSupabase() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    document.getElementById('loginSetupWarning').style.display = 'block';
+    return false;
+  }
+  _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return true;
+}
+
+async function boot() {
+  if (!initSupabase()) return;
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      STATE.user = session.user;
+      showApp();
+    } else {
+      STATE.user = null;
+      showLogin();
+    }
+  });
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session?.user) { STATE.user = session.user; showApp(); }
+  else showLogin();
+
+  // Load saved backend URL
+  const saved = localStorage.getItem('cc_backend_url');
+  if (saved) document.getElementById('backendUrlInput').value = saved;
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────
+async function login() {
+  if (!_sb) { if (!initSupabase()) return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginError');
+  err.style.display = 'none';
+  if (!email || !pass) { showLoginError('Email and password required.'); return; }
+  const { error } = await _sb.auth.signInWithPassword({ email, password: pass });
+  if (error) showLoginError(error.message);
+}
+
+async function signUp() {
+  if (!_sb) { if (!initSupabase()) return; }
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) { showLoginError('Email and password required.'); return; }
+  const { error } = await _sb.auth.signUp({ email, password: pass });
+  if (error) showLoginError(error.message);
+  else showLoginError('Check your email to confirm your account!');
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function logout() {
+  await _sb.auth.signOut();
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('userBadge').textContent = STATE.user.email;
+  loadJobs();
+  loadApplications();
+  loadCompanies();
+  loadIngestStatus();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+}
+
+// ── Navigation ────────────────────────────────────────────────────────
+function setView(v) {
+  STATE.view = v;
+  ['jobs','applications','companies','ingest'].forEach(id => {
+    document.getElementById(`view-${id}`).style.display = id === v ? 'block' : 'none';
+    document.getElementById(`tab-${id}`).classList.toggle('active', id === v);
+  });
+  if (v === 'applications') loadApplications();
+  if (v === 'companies') renderCompanies();
+  if (v === 'ingest') loadIngestStatus();
+}
+
+// ── Jobs ──────────────────────────────────────────────────────────────
+async function loadJobs() {
+  setSyncStatus('syncing');
+  try {
+    const { data, error } = await _sb
+      .from('fit_scores')
+      .select('*, jobs(*, companies(name, logo_url, quality_score, remote_policy))')
+      .eq('user_id', STATE.user.id)
+      .order('composite', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    STATE.allJobs = data || [];
+    updateJobStats();
+    renderJobs();
+    setSyncStatus('synced');
+  } catch(e) {
+    setSyncStatus('error');
+    toast('Failed to load jobs: ' + e.message, 'error');
+  }
+}
+
+function setJobFilter(f) {
+  STATE.jobFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(el => {
+    el.classList.remove('active','all','strong','good','stretch','pass');
+  });
+  const tierMap = { all:'all', strong_fit:'strong', good_fit:'good', stretch:'stretch', pass:'pass' };
+  event.currentTarget.classList.add('active', tierMap[f] || 'all');
+  renderJobs();
+}
+
+function renderJobs() {
+  const remoteOnly = document.getElementById('remoteOnly').checked;
+  let jobs = STATE.allJobs;
+  if (STATE.jobFilter !== 'all') jobs = jobs.filter(j => j.tier === STATE.jobFilter);
+  if (remoteOnly) jobs = jobs.filter(j => j.jobs?.remote);
+
+  const el = document.getElementById('jobList');
+  if (!jobs.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div style="font-size:40px;margin-bottom:12px;">🔍</div>
+      <div style="font-size:16px;font-weight:600;color:#64748b;">No jobs found</div>
+      <div style="font-size:13px;margin-top:6px;">Run ingestion + scoring to populate your feed.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = jobs.map(row => jobCard(row)).join('');
+}
+
+function jobCard(row) {
+  const j = row.jobs || {};
+  const c = j.companies || {};
+  const score = row.composite || 0;
+  const tier = row.tier || 'pass';
+  const tierLabels = { strong_fit:'STRONG FIT', good_fit:'GOOD FIT', stretch:'STRETCH', pass:'PASS' };
+  const tierClass = { strong_fit:'tier-strong', good_fit:'tier-good', stretch:'tier-stretch', pass:'tier-pass' };
+  const scoreClass = score>=80?'score-high':score>=65?'score-mid':score>=50?'score-low':'score-poor';
+
+  const salaryStr = j.salary_min || j.salary_max
+    ? `$${((j.salary_min||j.salary_max)/1000).toFixed(0)}k${j.salary_max?'–$'+(j.salary_max/1000).toFixed(0)+'k':''}`
+    : '';
+
+  const tags = [
+    j.remote ? '🌐 Remote' : j.hybrid ? '🏠 Hybrid' : '',
+    j.seniority ? j.seniority.charAt(0).toUpperCase()+j.seniority.slice(1) : '',
+    j.role_category ? j.role_category.replace(/_/g,' ') : '',
+    salaryStr,
+  ].filter(Boolean);
+
+  return `
+  <div class="glass" style="padding:16px;display:flex;gap:14px;align-items:flex-start;">
+    <div class="score-ring ${scoreClass}">${score}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:#f1f5f9;">${esc(j.title||'Untitled')}</div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px;">${esc(c.name||'')} ${j.location?'· '+esc(j.location):''}</div>
+        </div>
+        <span class="tier-badge ${tierClass[tier]}">${tierLabels[tier]||tier}</span>
+      </div>
+      ${tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${tags.map(t=>`<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,0.06);color:#94a3b8;">${esc(t)}</span>`).join('')}</div>` : ''}
+      ${row.rationale ? `<div style="font-size:12px;color:#64748b;margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(row.rationale.substring(0,140))}…</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        ${j.apply_url ? `<a href="${esc(j.apply_url)}" target="_blank" class="btn btn-teal" style="padding:5px 12px;font-size:12px;text-decoration:none;">Apply ↗</a>` : ''}
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="openTrackModal('${row.job_id}','${esc(j.title||'')}')">📋 Track</button>
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="openScoreModal(${JSON.stringify(row).replace(/"/g,'&quot;')})">📊 Breakdown</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateJobStats() {
+  const jobs = STATE.allJobs;
+  document.getElementById('stat-strong').textContent = jobs.filter(j=>j.tier==='strong_fit').length;
+  document.getElementById('stat-good').textContent   = jobs.filter(j=>j.tier==='good_fit').length;
+  document.getElementById('stat-stretch').textContent= jobs.filter(j=>j.tier==='stretch').length;
+  document.getElementById('stat-total').textContent  = jobs.length;
+}
+
+// ── Applications ──────────────────────────────────────────────────────
+async function loadApplications() {
+  if (!STATE.user) return;
+  try {
+    const { data } = await _sb
+      .from('applications')
+      .select('*, jobs(title, companies(name))')
+      .eq('user_id', STATE.user.id)
+      .order('applied_at', { ascending: false });
+    STATE.applications = data || [];
+    renderApplications();
+  } catch(e) { console.error(e); }
+}
+
+function renderApplications() {
+  const apps = STATE.applications;
+  document.getElementById('appCount').textContent = `${apps.length} total`;
+
+  // Pipeline stats
+  const statusCounts = {};
+  apps.forEach(a => statusCounts[a.status] = (statusCounts[a.status]||0)+1);
+  const statusLabels = {applied:'Applied',phone_screen:'Phone Screen',interview:'Interview',offer:'Offer',rejected:'Rejected',withdrawn:'Withdrawn'};
+  document.getElementById('pipelineStats').innerHTML = Object.entries(statusCounts).map(([s,n])=>
+    `<div class="glass-sm" style="padding:8px 14px;display:flex;align-items:center;gap:8px;">
+      <span class="status-pill status-${s}">${statusLabels[s]||s}</span>
+      <span style="font-size:15px;font-weight:700;">${n}</span>
+    </div>`
+  ).join('');
+
+  const el = document.getElementById('appList');
+  if (!apps.length) {
+    el.innerHTML = `<div class="empty-state"><div style="font-size:40px;margin-bottom:12px;">📋</div><div style="font-size:16px;font-weight:600;color:#64748b;">No applications tracked yet</div><div style="font-size:13px;margin-top:6px;">Hit "Track" on any job to log it here.</div></div>`;
+    return;
+  }
+
+  el.innerHTML = apps.map(a => {
+    const title = a.jobs?.title || 'Unknown Role';
+    const company = a.jobs?.companies?.name || '';
+    return `
+    <div class="glass-sm" style="padding:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:180px;">
+        <div style="font-size:14px;font-weight:600;">${esc(title)}</div>
+        <div style="font-size:12px;color:#64748b;">${esc(company)}${a.applied_at?' · '+a.applied_at:''}</div>
+      </div>
+      <span class="status-pill status-${a.status||'applied'}">${statusLabels[a.status]||a.status}</span>
+      ${a.notes?`<div style="font-size:12px;color:#64748b;flex-basis:100%;padding-top:4px;">${esc(a.notes)}</div>`:''}
+      <div style="display:flex;gap:6px;margin-left:auto;">
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;" onclick="openStatusModal('${a.id}','${esc(title)}','${a.status}')">Update</button>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="deleteApplication('${a.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Companies ─────────────────────────────────────────────────────────
+async function loadCompanies() {
+  if (!STATE.user) return;
+  try {
+    const { data } = await _sb.from('companies').select('*').eq('active', true).order('name');
+    STATE.companies = data || [];
+    renderCompanies();
+  } catch(e) { console.error(e); }
+}
+
+function filterCompanies() { renderCompanies(); }
+
+function renderCompanies() {
+  const search = (document.getElementById('companySearch')?.value||'').toLowerCase();
+  const ats    = document.getElementById('companyAts')?.value || '';
+  let list = STATE.companies;
+  if (search) list = list.filter(c => c.name.toLowerCase().includes(search) || (c.hq_location||'').toLowerCase().includes(search));
+  if (ats)    list = list.filter(c => c.ats_type === ats);
+
+  const el = document.getElementById('companyList');
+  if (!list.length) { el.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No companies found.</div>`; return; }
+
+  const qualityColor = q => q>=80?'#86efac':q>=60?'#5eead4':'#94a3b8';
+  const statusBadge = s => s==='preferred'?'⭐ Preferred':s==='blocked'?'🚫 Blocked':'';
+
+  el.innerHTML = list.map(c => `
+  <div class="glass-sm" style="padding:14px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">
+      <div style="font-size:14px;font-weight:600;">${esc(c.name)}</div>
+      ${c.user_status&&c.user_status!=='neutral'?`<span style="font-size:11px;color:#94a3b8;">${statusBadge(c.user_status)}</span>`:''}
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-top:3px;">${c.hq_location||''} ${c.size?'· '+c.size:''}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.06);color:#94a3b8;">${c.ats_type||'manual'}</span>
+      <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,0.06);color:#94a3b8;">${c.remote_policy||'unknown'}</span>
+      <span style="font-size:12px;color:${qualityColor(c.quality_score||70)};margin-left:auto;">★ ${c.quality_score||70}</span>
+    </div>
+  </div>`).join('');
+}
+
+// ── Ingest ────────────────────────────────────────────────────────────
+async function loadIngestStatus() {
+  const el = document.getElementById('ingestStatus');
+  const backendUrl = localStorage.getItem('cc_backend_url') || BACKEND_URL;
+  if (!backendUrl || backendUrl === 'YOUR_BACKEND_URL') {
+    el.innerHTML = `<span style="color:#fde047;">⚠️ Backend URL not set — set it below to enable remote ingestion.</span>`;
+    return;
+  }
+  try {
+    const r = await fetch(`${backendUrl}/api/ingest/status`);
+    const d = await r.json();
+    el.innerHTML = d.status === 'no_runs_yet'
+      ? 'No ingestion runs yet.'
+      : `<pre style="color:#94a3b8;font-size:12px;white-space:pre-wrap;">${JSON.stringify(d.value||d, null, 2)}</pre>`;
+  } catch(e) {
+    el.textContent = 'Could not reach backend: ' + e.message;
+  }
+}
+
+async function triggerIngest() {
+  const backendUrl = localStorage.getItem('cc_backend_url') || BACKEND_URL;
+  if (!backendUrl || backendUrl === 'YOUR_BACKEND_URL') { toast('Set backend URL first','error'); return; }
+  const btn = document.getElementById('ingestBtn');
+  btn.disabled = true; btn.textContent = 'Running…';
+  try {
+    await fetch(`${backendUrl}/api/ingest`, { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+    toast('Ingestion started in background');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  btn.disabled = false; btn.textContent = 'Run Ingestion';
+}
+
+async function triggerScoring() {
+  const backendUrl = localStorage.getItem('cc_backend_url') || BACKEND_URL;
+  if (!backendUrl || backendUrl === 'YOUR_BACKEND_URL') { toast('Set backend URL first','error'); return; }
+  const btn = document.getElementById('scoreBtn');
+  btn.disabled = true; btn.textContent = 'Running…';
+  try {
+    await fetch(`${backendUrl}/api/ingest/score`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: STATE.user.id })
+    });
+    toast('Scoring started — refresh jobs in a moment');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+  btn.disabled = false; btn.textContent = 'Run Scoring';
+}
+
+function saveBackendUrl() {
+  const url = document.getElementById('backendUrlInput').value.trim();
+  localStorage.setItem('cc_backend_url', url);
+  toast('Backend URL saved');
+  loadIngestStatus();
+}
+
+// ── Track Modal ───────────────────────────────────────────────────────
+function openTrackModal(jobId, title) {
+  _trackJobId = jobId;
+  document.getElementById('trackJobTitle').textContent = title;
+  document.getElementById('trackDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('trackNotes').value = '';
+  document.getElementById('trackModal').style.display = 'flex';
+}
+function closeTrackModal() { document.getElementById('trackModal').style.display = 'none'; }
+
+async function submitTrackModal() {
+  const payload = {
+    user_id:    STATE.user.id,
+    job_id:     _trackJobId,
+    status:     document.getElementById('trackStatus').value,
+    applied_at: document.getElementById('trackDate').value,
+    notes:      document.getElementById('trackNotes').value || null,
+  };
+  const { error } = await _sb.from('applications').insert(payload);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast('Application logged!');
+  closeTrackModal();
+  loadApplications();
+}
+
+// ── Status Modal ──────────────────────────────────────────────────────
+function openStatusModal(appId, title, currentStatus) {
+  _statusAppId = appId;
+  document.getElementById('statusModalTitle').textContent = title;
+  document.getElementById('statusModalSelect').value = currentStatus;
+  document.getElementById('statusModalNotes').value = '';
+  document.getElementById('statusModal').style.display = 'flex';
+}
+function closeStatusModal() { document.getElementById('statusModal').style.display = 'none'; }
+
+async function submitStatusModal() {
+  const payload = {
+    status: document.getElementById('statusModalSelect').value,
+    notes:  document.getElementById('statusModalNotes').value || null,
+  };
+  const { error } = await _sb.from('applications').update(payload).eq('id', _statusAppId);
+  if (error) { toast('Error: '+error.message,'error'); return; }
+  toast('Status updated');
+  closeStatusModal();
+  loadApplications();
+}
+
+async function deleteApplication(appId) {
+  if (!confirm('Remove this application?')) return;
+  await _sb.from('applications').delete().eq('id', appId);
+  toast('Removed');
+  loadApplications();
+}
+
+// ── Score Breakdown Modal ─────────────────────────────────────────────
+function openScoreModal(row) {
+  const j = row.jobs || {};
+  document.getElementById('scoreModalTitle').textContent = j.title || 'Score Breakdown';
+
+  const dims = [
+    { label:'Role Fit',        key:'role_fit',        weight:'30%' },
+    { label:'Growth Fit',      key:'growth_fit',      weight:'20%' },
+    { label:'Skills Match',    key:'skills_match',    weight:'20%' },
+    { label:'Compensation',    key:'comp_fit',        weight:'10%' },
+    { label:'Remote Fit',      key:'remote_fit',      weight:'10%' },
+    { label:'Company Quality', key:'company_quality', weight:'5%'  },
+    { label:'Realism',         key:'realism',         weight:'5%'  },
+  ];
+
+  const barColor = v => v>=80?'#22c55e':v>=65?'#14b8a6':v>=50?'#eab308':'#ef4444';
+
+  document.getElementById('scoreModalBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div class="score-ring ${row.composite>=80?'score-high':row.composite>=65?'score-mid':row.composite>=50?'score-low':'score-poor'}" style="width:56px;height:56px;font-size:18px;">${row.composite}</div>
+      <div>
+        <div style="font-size:13px;color:#64748b;">Composite Score</div>
+        <span class="tier-badge ${{strong_fit:'tier-strong',good_fit:'tier-good',stretch:'tier-stretch',pass:'tier-pass'}[row.tier]||'tier-pass'}">${row.tier?.replace('_',' ').toUpperCase()||'PASS'}</span>
+      </div>
+    </div>
+    ${dims.map(d => {
+      const v = row[d.key] || 0;
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="color:#94a3b8;">${d.label} <span style="color:#475569;">(${d.weight})</span></span>
+          <span style="color:#e2e8f0;font-weight:600;">${v}</span>
+        </div>
+        <div class="dim-bar"><div class="dim-fill" style="width:${v}%;background:${barColor(v)};"></div></div>
+      </div>`;
+    }).join('')}
+    ${row.rationale ? `<div style="margin-top:14px;padding:10px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:12px;color:#64748b;line-height:1.6;">${esc(row.rationale)}</div>` : ''}`;
+
+  document.getElementById('scoreModal').style.display = 'flex';
+}
+function closeScoreModal() { document.getElementById('scoreModal').style.display = 'none'; }
+
+// ── Sync status ───────────────────────────────────────────────────────
+function setSyncStatus(s) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  if (s==='syncing') { dot.style.background='#eab308'; txt.textContent='syncing…'; }
+  else if (s==='synced') { dot.style.background='#22c55e'; txt.textContent='synced'; }
+  else { dot.style.background='#ef4444'; txt.textContent='error'; }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = type==='error' ? 'rgba(239,68,68,0.9)' : 'rgba(20,184,166,0.9)';
+  t.style.color = '#fff';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Start ─────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
