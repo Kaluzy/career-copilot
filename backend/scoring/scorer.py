@@ -1,5 +1,5 @@
 """
-Fit scoring engine — MVP rule-based version.
+Fit scoring engine - MVP rule-based version.
 Scores a job against the candidate profile across 7 dimensions.
 Phase 2 will add Claude AI for rationale generation.
 """
@@ -39,7 +39,7 @@ def score_role_fit(job: dict, profile: dict) -> tuple[int, str]:
     if category in ALIGNED_CATEGORIES:
         return 65, f"Role category '{category}' is aligned but not primary target"
     if category in LATERAL_CATEGORIES:
-        return 25, f"Role category '{category}' is lateral — no growth"
+        return 25, f"Role category '{category}' is lateral - no growth"
     return 40, f"Role category '{category}' is unclear fit"
 
 
@@ -52,11 +52,11 @@ def score_growth_fit(job: dict) -> tuple[int, str]:
     if growth_tier == "target" and seniority in ("mid", "senior"):
         return 90, "Target role at appropriate seniority level"
     if growth_tier == "target" and seniority == "junior":
-        return 60, "Target role but junior level — slight step back"
+        return 60, "Target role but junior level - slight step back"
     if growth_tier == "aligned" and seniority in ("mid", "senior"):
-        return 70, "Aligned role — good step in right direction"
+        return 70, "Aligned role - good step in right direction"
     if growth_tier == "lateral":
-        return 20, "Lateral move — no growth value"
+        return 20, "Lateral move - no growth value"
     return 50, "Growth fit unclear"
 
 
@@ -110,7 +110,7 @@ def score_comp_fit(job: dict, profile: dict) -> tuple[int, str]:
     floor = profile.get("salary_min") or 65000
 
     if not salary_max and not salary_min:
-        return 55, "Salary not listed — assuming neutral"
+        return 55, "Salary not listed - assuming neutral"
 
     effective_max = salary_max or salary_min
     effective_min = salary_min or (salary_max * 0.8 if salary_max else 0)
@@ -142,19 +142,19 @@ def score_remote_fit(job: dict, profile: dict) -> tuple[int, str]:
 
     if remote_pref == "required":
         if is_remote:
-            return 100, "Remote role — matches requirement"
+            return 100, "Remote role - matches requirement"
         if is_hybrid:
-            return 50, "Hybrid role — partially meets remote requirement"
-        return 10, "Onsite role — does not meet remote requirement"
+            return 50, "Hybrid role - partially meets remote requirement"
+        return 10, "Onsite role - does not meet remote requirement"
 
     if remote_pref == "preferred":
         if is_remote:
-            return 100, "Remote role — matches preference"
+            return 100, "Remote role - matches preference"
         if is_hybrid:
-            return 80, "Hybrid — close to preference"
-        return 45, "Onsite only — not preferred but possible"
+            return 80, "Hybrid - close to preference"
+        return 45, "Onsite only - not preferred but possible"
 
-    # "open" — location flexible
+    # "open" - location flexible
     return 70, "Location is flexible"
 
 
@@ -176,14 +176,14 @@ def score_realism(job: dict) -> tuple[int, str]:
     seniority = job.get("seniority", "mid")
     # For a mid-level IT professional targeting growth:
     if seniority == "junior":
-        return 75, "Junior role — slightly overqualified, but acceptable"
+        return 75, "Junior role - slightly overqualified, but acceptable"
     if seniority == "mid":
-        return 90, "Mid-level role — realistic match"
+        return 90, "Mid-level role - realistic match"
     if seniority == "senior":
-        return 55, "Senior role — stretch, but realistic with strong application"
+        return 55, "Senior role - stretch, but realistic with strong application"
     if seniority == "lead":
-        return 30, "Lead role — significant stretch"
-    return 70, "Seniority unclear — assuming mid-level"
+        return 30, "Lead role - significant stretch"
+    return 70, "Seniority unclear - assuming mid-level"
 
 
 def score_job(job: dict, profile: dict, company: dict) -> dict:

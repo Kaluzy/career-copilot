@@ -155,6 +155,12 @@ const BACKEND_URL      = 'https://career-copilot-65h5.onrender.com';
           <span class="filter-tab" onclick="setJobFilter('pass')">🔴 Pass</span>
         </div>
         <div style="flex:1;"></div>
+        <select id="ageFilter" onchange="renderJobs()" style="font-size:13px;padding:4px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:6px;color:#94a3b8;">
+          <option value="0">All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#94a3b8;cursor:pointer;">
           <input type="checkbox" id="remoteOnly" onchange="renderJobs()" style="width:auto;"> Remote only
         </label>
@@ -427,9 +433,18 @@ function setJobFilter(f) {
 
 function renderJobs() {
   const remoteOnly = document.getElementById('remoteOnly').checked;
+  const ageDays = parseInt(document.getElementById('ageFilter').value || '0');
   let jobs = STATE.allJobs;
   if (STATE.jobFilter !== 'all') jobs = jobs.filter(j => j.tier === STATE.jobFilter);
   if (remoteOnly) jobs = jobs.filter(j => j.jobs?.remote);
+  if (ageDays > 0) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - ageDays);
+    jobs = jobs.filter(j => {
+      const posted = j.jobs?.posted_at;
+      return posted && new Date(posted) >= cutoff;
+    });
+  }
 
   const el = document.getElementById('jobList');
   if (!jobs.length) {
@@ -471,7 +486,7 @@ function jobCard(row) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
         <div>
           <div style="font-size:15px;font-weight:600;color:#f1f5f9;">${esc(j.title||'Untitled')}</div>
-          <div style="font-size:13px;color:#64748b;margin-top:2px;">${esc(c.name||'')} ${j.location?'· '+esc(j.location):''}</div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px;">${esc(c.name||'')} ${j.location?'· '+esc(j.location):''} ${j.posted_at?'· '+daysAgo(j.posted_at):''}</div>
         </div>
         <span class="tier-badge ${tierClass[tier]}">${tierLabels[tier]||tier}</span>
       </div>
@@ -760,6 +775,16 @@ function toast(msg, type='success') {
 // ── Helpers ───────────────────────────────────────────────────────────
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function daysAgo(dateStr) {
+  if (!dateStr) return '';
+  const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+  if (d === 0) return 'today';
+  if (d === 1) return '1d ago';
+  if (d < 30) return d + 'd ago';
+  if (d < 60) return '1mo ago';
+  return Math.floor(d/30) + 'mo ago';
 }
 
 // ── Start ─────────────────────────────────────────────────────────────
