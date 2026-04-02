@@ -58,11 +58,11 @@ async def run_ingestion(company_slug: str | None = None) -> dict:
                     stats["jobs_skipped"] += 1
                     print(f"[runner] Skip job ({job.get('title')}): {e}")
 
-            print(f"[runner] ✓ {company['name']}: {len(jobs)} jobs processed")
+            print(f"[runner] OK {company['name']}: {len(jobs)} jobs processed")
 
         except Exception as e:
             stats["errors"].append({"company": company["name"], "error": str(e)})
-            print(f"[runner] ✗ {company['name']}: {e}")
+            print(f"[runner] FAIL {company['name']}: {e}")
 
         # Small delay between companies to be polite
         await asyncio.sleep(1)

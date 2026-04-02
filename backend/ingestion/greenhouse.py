@@ -56,16 +56,9 @@ async def fetch_jobs(company: dict) -> list[dict]:
                 except Exception:
                     pass
 
-            # Fetch full description (separate API call per job)
+            # Description requires a per-job API call — skip for now to keep
+            # ingestion fast. Fetch on-demand when user opens a job detail.
             description_raw = ""
-            try:
-                detail_url = GREENHOUSE_JOB_URL.format(slug=slug, job_id=job_id)
-                detail_resp = await client.get(detail_url)
-                if detail_resp.status_code == 200:
-                    detail = detail_resp.json()
-                    description_raw = detail.get("content", "")
-            except Exception:
-                pass  # description is nice to have, not required
 
             raw_normalized = {
                 "job_id": job_id,

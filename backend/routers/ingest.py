@@ -31,13 +31,19 @@ async def trigger_ingestion(body: IngestRequest, background_tasks: BackgroundTas
     from ingestion.runner import run_ingestion
 
     async def _run():
-        stats = await run_ingestion(company_slug=body.company_slug)
-        # Persist last-run stats so /status can return them
-        db = get_db()
-        db.table("system_settings").upsert(
-            {"key": "last_ingest_stats", "value": stats},
-            on_conflict="key"
-        ).execute()
+        try:
+            stats = await run_ingestion(company_slug=body.company_slug)
+        except Exception as e:
+            stats = {"error": str(e)}
+            print(f"[ingest] background task failed: {e}")
+        try:
+            db = get_db()
+            db.table("system_settings").upsert(
+                {"key": "last_ingest_stats", "value": stats},
+                on_conflict="key"
+            ).execute()
+        except Exception as e:
+            print(f"[ingest] failed to save stats: {e}")
 
     background_tasks.add_task(_run)
     scope = body.company_slug or "all companies"
@@ -64,10 +70,10 @@ async def ingest_status():
         db.table("system_settings")
         .select("value, updated_at")
         .eq("key", "last_ingest_stats")
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not result.data:
+    if not result or not result.data:
         return {"status": "no_runs_yet"}
     return result.data
 

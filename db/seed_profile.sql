@@ -23,9 +23,9 @@ INSERT INTO candidate_profile (
   work_auth,
   career_summary
 ) VALUES (
-  'YOUR-USER-UUID-HERE',
+  '7fe55997-e508-4d10-a7cf-67aa2f81c884',
   'Kaleab Tesfaye',
-  'Desktop Support Specialist',
+  'Desktop Support Specialist III',
   'Maxim Healthcare',
   4,
 
@@ -91,7 +91,7 @@ INSERT INTO candidate_profile (
     'Infrastructure Support Engineer',
     'Application Deployment Specialist',
     'Desktop Engineering Specialist'
-  ]',
+  ],
 
   -- Roles to avoid
   ARRAY['help_desk_tier1', 'sales_engineering', 'software_development', 'data_science'],
