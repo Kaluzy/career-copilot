@@ -67,7 +67,20 @@ async def run_ingestion(company_slug: str | None = None) -> dict:
         # Small delay between companies to be polite
         await asyncio.sleep(1)
 
-    print(f"[runner] Done. {stats}")
+    print(f"[runner] Done ingesting. {stats}")
+
+    # Auto-score new jobs for every user that has a profile
+    db2 = get_db()
+    profiles = db2.table("candidate_profile").select("user_id").execute().data or []
+    stats["scored"] = 0
+    for p in profiles:
+        try:
+            score_stats = await run_scoring_for_user(p["user_id"])
+            stats["scored"] += score_stats.get("scored", 0)
+        except Exception as e:
+            print(f"[runner] Scoring failed for user {p['user_id'][:8]}: {e}")
+
+    print(f"[runner] Done scoring. Total scored: {stats['scored']}")
     return stats
 
 
