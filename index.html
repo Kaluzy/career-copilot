@@ -145,6 +145,15 @@ const BACKEND_URL      = 'https://career-copilot-65h5.onrender.com';
         </div>
       </div>
 
+      <!-- Search Bar -->
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="jobSearch" type="text" placeholder="Search jobs, companies, skills…"
+          oninput="renderJobs()"
+          style="width:100%;padding:9px 12px 9px 36px;font-size:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#e2e8f0;outline:none;"/>
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#475569;font-size:15px;pointer-events:none;">🔍</span>
+        <button id="jobSearchClear" onclick="clearJobSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;padding:0 4px;">✕</button>
+      </div>
+
       <!-- Filter Bar -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -456,6 +465,19 @@ function renderJobs() {
   if (STATE.companyFilter) {
     jobs = jobs.filter(j => j.jobs?.company_id === STATE.companyFilter);
   }
+  const q = (document.getElementById('jobSearch')?.value || '').toLowerCase().trim();
+  if (q) {
+    jobs = jobs.filter(j => {
+      const jd = j.jobs || {};
+      return (jd.title||'').toLowerCase().includes(q)
+          || (jd.companies?.name||'').toLowerCase().includes(q)
+          || (jd.location||'').toLowerCase().includes(q)
+          || (jd.role_category||'').replace(/_/g,' ').includes(q)
+          || (j.rationale||'').toLowerCase().includes(q);
+    });
+  }
+  const clearBtn = document.getElementById('jobSearchClear');
+  if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
 
   // Show/hide company filter banner
   const banner = document.getElementById('companyFilterBanner');
@@ -532,6 +554,11 @@ function viewCompanyJobs(companyId, companyName) {
 function clearCompanyFilter() {
   STATE.companyFilter = null;
   STATE.companyFilterName = null;
+  renderJobs();
+}
+
+function clearJobSearch() {
+  document.getElementById('jobSearch').value = '';
   renderJobs();
 }
 
