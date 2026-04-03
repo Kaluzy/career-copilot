@@ -1,13 +1,13 @@
 """
 Ashby ATS connector.
-Public API: https://jobs.ashbyhq.com/{slug}/non-applied/job-board-api
+Public API: https://api.ashbyhq.com/posting-api/job-board/{slug}
 No auth required. Returns JSON with all postings + descriptions included.
 """
 import httpx
 from datetime import datetime
 from ingestion.normalizer import normalize_job
 
-ASHBY_URL = "https://jobs.ashbyhq.com/{slug}/non-applied/job-board-api"
+ASHBY_URL = "https://api.ashbyhq.com/posting-api/job-board/{slug}"
 HEADERS = {"User-Agent": "CareerCopilot/1.0 (personal job tracker)"}
 
 
@@ -29,18 +29,37 @@ async def fetch_jobs(company: dict) -> list[dict]:
             print(f"[ashby] Error fetching {company['name']}: {e}")
             return []
 
-        raw_jobs = data.get("jobPostings", [])
+        raw_jobs = data.get("jobs", [])
         print(f"[ashby] {company['name']}: {len(raw_jobs)} jobs found")
 
         for raw in raw_jobs:
-            job_id   = raw.get("id", "")
-            title    = raw.get("title", "")
-            location = raw.get("locationName", "") or raw.get("location", "")
-            apply_url = f"https://jobs.ashbyhq.com/{slug}/{job_id}"
+            job_id = raw.get("id", "")
+            title  = raw.get("title", "")
+
+            # Location — Ashby provides structured address + workplaceType
+            loc_parts = []
+            address = raw.get("address") or {}
+            city    = address.get("city", "")
+            state   = address.get("state", "")
+            country = address.get("country", "")
+            if city:    loc_parts.append(city)
+            if state:   loc_parts.append(state)
+            if country and country != "United States": loc_parts.append(country)
+            location = ", ".join(loc_parts)
+
+            workplace = raw.get("workplaceType", "")  # "Remote", "OnSite", "Hybrid"
+            if workplace == "Remote" and not location:
+                location = "Remote"
+            elif workplace == "Remote":
+                location = f"Remote - {location}"
+            elif workplace == "Hybrid":
+                location = f"Hybrid - {location}" if location else "Hybrid"
+
+            apply_url = raw.get("jobUrl", f"https://jobs.ashbyhq.com/{slug}/{job_id}")
 
             # Posted date
             posted_at = None
-            created = raw.get("publishedAt") or raw.get("createdAt", "")
+            created = raw.get("publishedAt") or raw.get("updatedAt", "")
             if created:
                 try:
                     posted_at = datetime.fromisoformat(
@@ -49,11 +68,8 @@ async def fetch_jobs(company: dict) -> list[dict]:
                 except Exception:
                     pass
 
-            # Description included in Ashby list response
-            desc_parts = []
-            for section in raw.get("descriptionSections", []):
-                desc_parts.append(section.get("content", ""))
-            description_raw = "\n\n".join(desc_parts) or raw.get("description", "")
+            # Description — Ashby includes both HTML and plain text
+            description_raw = raw.get("descriptionHtml") or raw.get("descriptionPlain", "")
 
             normalized = normalize_job(
                 raw={
