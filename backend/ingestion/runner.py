@@ -4,13 +4,16 @@ Called by the scheduler (daily) or manually via API.
 """
 import asyncio
 from database import get_db
-from ingestion import greenhouse, lever
+from ingestion import greenhouse, lever, ashby, smartrecruiters, adzuna
 from ingestion.normalizer import is_relevant
 
 
 CONNECTOR_MAP = {
-    "greenhouse": greenhouse.fetch_jobs,
-    "lever":      lever.fetch_jobs,
+    "greenhouse":      greenhouse.fetch_jobs,
+    "lever":           lever.fetch_jobs,
+    "ashby":           ashby.fetch_jobs,
+    "smartrecruiters": smartrecruiters.fetch_jobs,
+    "adzuna":          adzuna.fetch_jobs,
 }
 
 
