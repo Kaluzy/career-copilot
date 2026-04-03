@@ -126,12 +126,23 @@ def score_comp_fit(job: dict, profile: dict) -> tuple[int, str]:
     return 30, f"Salary range is low"
 
 
+INTERNATIONAL_SIGNALS = [
+    "japan", "tokyo", "korea", "seoul", "australia", "sydney", "poland", "emea",
+    "ireland", "dublin", "amsterdam", "netherlands", "uk", "london", "india",
+    "bangalore", "singapore", "canada", "toronto", "mexico", "brazil", "germany",
+    "france", "spain", "italy", "sweden", "denmark", "norway", "finland",
+]
+
 def score_remote_fit(job: dict, profile: dict) -> tuple[int, str]:
     """Does the remote/location setup match the candidate's preference?"""
     remote_pref = profile.get("remote_pref", "preferred")
     is_remote = job.get("remote", False)
     is_hybrid = job.get("hybrid", False)
     location = (job.get("location") or "").lower()
+
+    # Penalize clearly international roles (candidate is US-based)
+    if any(sig in location for sig in INTERNATIONAL_SIGNALS):
+        return 5, f"International location - not a match for US-based candidate"
 
     # Override detection: check location field for clues
     if not is_remote and not is_hybrid:
