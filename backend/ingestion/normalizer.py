@@ -42,13 +42,16 @@ ROLE_KEYWORDS: dict[str, list[str]] = {
     ],
     "it_operations": [
         "it operations", "it ops", "operations analyst", "infrastructure support",
-        "it support engineer", "technical support engineer", "platform engineer",
-        "it infrastructure", "corporate it"
+        "it support engineer", "technical support engineer", "platform support",
+        "it infrastructure", "corporate it", "saas administrator", "saas admin",
+        "it engineer", "corporate technology", "workplace engineer",
+        "it generalist", "systems support", "technology support engineer",
+        "technology operations", "it specialist"
     ],
     "help_desk": [
         "help desk", "helpdesk", "service desk", "desktop support", "level 1",
         "level 2", "tier 1", "tier 2", "it support specialist", "it technician",
-        "it support analyst"
+        "it support analyst", "support analyst", "user support"
     ],
 }
 
@@ -76,6 +79,19 @@ def categorize_role(title: str) -> str:
             if kw in title_lower:
                 return category
     return "other"
+
+
+# Only store jobs in these categories — drop everything else before hitting the DB
+KEEP_CATEGORIES = {
+    "endpoint_management", "digital_workplace", "systems_admin",
+    "mdm_mobility", "desktop_engineering", "deployment_packaging",
+    "it_operations", "help_desk",
+}
+
+
+def is_relevant(role_category: str) -> bool:
+    """Return True if this job is worth storing and scoring."""
+    return role_category in KEEP_CATEGORIES
 
 
 def detect_seniority(title: str) -> str:

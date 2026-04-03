@@ -534,11 +534,68 @@ function jobCard(row) {
       ${row.rationale ? `<div style="font-size:12px;color:#64748b;margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(row.rationale.substring(0,140))}…</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
         ${j.apply_url ? `<a href="${esc(j.apply_url)}" target="_blank" class="btn btn-teal" style="padding:5px 12px;font-size:12px;text-decoration:none;">Apply ↗</a>` : ''}
+        <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="toggleJobDesc('${row.job_id}','${esc(j.source||'')}',this)">📄 Description</button>
         <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="openTrackModal('${row.job_id}','${esc(j.title||'')}')">📋 Track</button>
         <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;" onclick="openScoreModal(${JSON.stringify(row).replace(/"/g,'&quot;')})">📊 Breakdown</button>
       </div>
+      <div id="desc-${row.job_id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);font-size:13px;color:#cbd5e1;line-height:1.7;max-height:400px;overflow-y:auto;"></div>
     </div>
   </div>`;
+}
+
+async function toggleJobDesc(jobId, source, btn) {
+  const el = document.getElementById('desc-' + jobId);
+  if (!el) return;
+  if (el.style.display !== 'none') {
+    el.style.display = 'none';
+    btn.textContent = '📄 Description';
+    return;
+  }
+  el.style.display = 'block';
+  btn.textContent = '⏳ Loading…';
+  btn.disabled = true;
+
+  if (el.dataset.loaded) { btn.textContent = '📄 Hide'; btn.disabled = false; return; }
+
+  try {
+    // Fetch job record to get apply_url / source_id for Greenhouse lookup
+    const { data: job } = await _sb.from('jobs').select('apply_url, source, source_id, description_clean').eq('id', jobId).single();
+
+    // If we already have a description in the DB, use it
+    if (job?.description_clean && job.description_clean.length > 50) {
+      el.innerHTML = `<div style="white-space:pre-wrap;">${esc(job.description_clean.substring(0,3000))}${job.description_clean.length>3000?'…':''}</div>`;
+      el.dataset.loaded = '1';
+      btn.textContent = '📄 Hide'; btn.disabled = false;
+      return;
+    }
+
+    // Otherwise fetch from Greenhouse API using the apply_url
+    if (source === 'greenhouse' && job?.apply_url) {
+      // Extract slug and job_id from apply URL: boards.greenhouse.io/companyslug/jobs/12345
+      const match = job.apply_url.match(/greenhouse\.io\/([^/]+)\/jobs\/(\d+)/);
+      if (match) {
+        const [, slug, ghJobId] = match;
+        const resp = await fetch(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs/${ghJobId}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const raw = data.content || '';
+          const tmp = document.createElement('div'); tmp.innerHTML = raw;
+          const text = tmp.textContent || tmp.innerText || '';
+          el.innerHTML = `<div style="white-space:pre-wrap;">${esc(text.substring(0,3000))}${text.length>3000?'…':''}</div>`;
+          el.dataset.loaded = '1';
+          btn.textContent = '📄 Hide'; btn.disabled = false;
+          return;
+        }
+      }
+    }
+
+    // Lever includes description in list — if blank, show message
+    el.innerHTML = `<span style="color:#64748b;">Description not available — click Apply ↗ to view on company site.</span>`;
+    el.dataset.loaded = '1';
+  } catch(e) {
+    el.innerHTML = `<span style="color:#f87171;">Failed to load description.</span>`;
+  }
+  btn.textContent = '📄 Hide'; btn.disabled = false;
 }
 
 function viewCompanyJobs(companyId, companyName) {

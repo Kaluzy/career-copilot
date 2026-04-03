@@ -5,6 +5,7 @@ Called by the scheduler (daily) or manually via API.
 import asyncio
 from database import get_db
 from ingestion import greenhouse, lever
+from ingestion.normalizer import is_relevant
 
 
 CONNECTOR_MAP = {
@@ -44,6 +45,9 @@ async def run_ingestion(company_slug: str | None = None) -> dict:
 
             if not jobs:
                 continue
+
+            # Drop non-IT jobs before hitting the DB
+            jobs = [j for j in jobs if is_relevant(j.get("role_category", "other"))]
 
             # Upsert jobs — skip if source_id already exists (dedup)
             for job in jobs:
