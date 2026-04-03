@@ -173,6 +173,9 @@ const BACKEND_URL      = 'https://career-copilot-65h5.onrender.com';
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#94a3b8;cursor:pointer;">
           <input type="checkbox" id="remoteOnly" onchange="renderJobs()" style="width:auto;"> Remote only
         </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#94a3b8;cursor:pointer;">
+          <input type="checkbox" id="noClearance" onchange="renderJobs()" style="width:auto;" checked> No clearance
+        </label>
         <button class="btn btn-ghost" style="padding:6px 12px;font-size:13px;" onclick="loadJobs()">↻ Refresh</button>
       </div>
 
@@ -450,10 +453,20 @@ function setJobFilter(f) {
 
 function renderJobs() {
   const remoteOnly = document.getElementById('remoteOnly').checked;
+  const noClearance = document.getElementById('noClearance').checked;
   const ageDays = parseInt(document.getElementById('ageFilter').value || '0');
   let jobs = STATE.allJobs;
   if (STATE.jobFilter !== 'all') jobs = jobs.filter(j => j.tier === STATE.jobFilter);
   if (remoteOnly) jobs = jobs.filter(j => j.jobs?.remote);
+  if (noClearance) {
+    const clearanceTerms = ['secret clearance', 'top secret', 'ts/sci', 'security clearance required',
+      'clearance required', 'active clearance', 'dod clearance', 'public trust', 'polygraph',
+      'sci eligible', 'clearance eligible', 'must be clearable'];
+    jobs = jobs.filter(j => {
+      const text = ((j.jobs?.title || '') + ' ' + (j.jobs?.description_clean || '') + ' ' + (j.rationale || '')).toLowerCase();
+      return !clearanceTerms.some(t => text.includes(t));
+    });
+  }
   if (ageDays > 0) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - ageDays);
