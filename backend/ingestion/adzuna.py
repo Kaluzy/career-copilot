@@ -18,19 +18,16 @@ from ingestion.normalizer import normalize_job
 ADZUNA_URL = "https://api.adzuna.com/v1/api/jobs/us/search/{page}"
 HEADERS = {"User-Agent": "CareerCopilot/1.0 (personal job tracker)"}
 
-# Search queries targeting IT roles we care about
+# Search queries — kept tight to avoid volume bloat
 SEARCH_QUERIES = [
-    "endpoint management engineer",
     "endpoint administrator intune sccm",
-    "digital workplace engineer",
     "MDM engineer intune jamf",
-    "desktop engineer deployment",
-    "systems administrator windows",
-    "IT operations engineer remote",
+    "digital workplace engineer",
+    "systems administrator windows active directory",
 ]
 
-RESULTS_PER_PAGE = 50
-MAX_PAGES = 2  # 100 results per query, keeps request count low
+RESULTS_PER_PAGE = 25
+MAX_PAGES = 1  # 25 results per query = ~100 max, filtered down further by is_relevant
 
 
 async def fetch_jobs(company: dict) -> list[dict]:
