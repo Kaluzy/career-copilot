@@ -98,12 +98,27 @@ async def run_scoring_for_user(user_id: str) -> dict:
     if not profile:
         return {"error": "No candidate profile found for user"}
 
-    # Get all jobs that haven't been scored for this user yet
-    all_jobs = db.table("jobs").select("*").eq("status", "new").execute().data or []
-    scored_ids = {
-        r["job_id"]
-        for r in (db.table("fit_scores").select("job_id").eq("user_id", user_id).execute().data or [])
-    }
+    # Fetch all jobs with pagination (Supabase caps at 1000 rows per query)
+    all_jobs = []
+    page_size = 1000
+    offset = 0
+    while True:
+        page = db.table("jobs").select("*").eq("status", "new").range(offset, offset + page_size - 1).execute().data or []
+        all_jobs.extend(page)
+        if len(page) < page_size:
+            break
+        offset += page_size
+
+    # Fetch all scored job IDs with pagination too
+    scored_ids = set()
+    offset = 0
+    while True:
+        page = db.table("fit_scores").select("job_id").eq("user_id", user_id).range(offset, offset + page_size - 1).execute().data or []
+        scored_ids.update(r["job_id"] for r in page)
+        if len(page) < page_size:
+            break
+        offset += page_size
+
     unscored = [j for j in all_jobs if j["id"] not in scored_ids]
 
     print(f"[scorer] Scoring {len(unscored)} jobs for user {user_id[:8]}...")
